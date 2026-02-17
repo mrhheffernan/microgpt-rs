@@ -50,4 +50,11 @@ fn main() {
     let mut docs: Vec<&str> = all_docs.split('\n').collect();
     docs.shuffle(&mut rng);
     println!("num docs: {}", docs.len());
+
+    // Initialize parameters to store the knowledge of the model
+    let n_embd: u64 = 16; // embedding dimension
+    let n_head: u64 = 4; // number of attention heads
+    let n_layer: u64 = 1; // number of layers
+    let block_size: u64 = 16; // maximum sequence length
+    let head_dim: u64 = n_embd / n_head; // dimension of each head, rust int division is floor division by default
 }
