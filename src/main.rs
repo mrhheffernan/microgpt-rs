@@ -28,10 +28,16 @@ impl Value {
         }
     }
 
-    pub fn backward(&self) {
+    pub fn backward(&mut self) {
         let mut topo: Vec<Value> = Vec::new();
         let mut visited: Vec<Value> = Vec::new();
         self.build_topo(&self, &mut visited, &mut topo);
+        self.grad = 1.0 as f64;
+        for v in topo.iter_mut().rev() {
+            for (child, local_grad) in v._children.iter_mut().zip(v._local_grads.iter_mut()) {
+                child.grad += local_grad.clone() * v.grad;
+            }
+        }
     }
 }
 
