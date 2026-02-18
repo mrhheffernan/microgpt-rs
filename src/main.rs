@@ -92,4 +92,44 @@ fn main() {
         String::from("lm_head"),
         matrix(vocab_size, n_embd, &mut rng),
     );
+
+    for i in 0..n_layer {
+        state_dict.insert(
+            format!("layer{i}.attn_wq"),
+            matrix(n_embd, n_embd, &mut rng),
+        );
+        state_dict.insert(
+            format!("layer{i}.attn_wk"),
+            matrix(n_embd, n_embd, &mut rng),
+        );
+        state_dict.insert(
+            format!("layer{i}.attn_wv"),
+            matrix(n_embd, n_embd, &mut rng),
+        );
+        state_dict.insert(
+            format!("layer{i}.attn_wo"),
+            matrix(n_embd, n_embd, &mut rng),
+        );
+        state_dict.insert(
+            format!("layer{i}.mlp_fc1"),
+            matrix(4 * n_embd, n_embd, &mut rng),
+        );
+        state_dict.insert(
+            format!("layer{i}.mlp_fc2"),
+            matrix(n_embd, 4 * n_embd, &mut rng),
+        );
+    }
+
+    let mut params: Vec<Value> = Vec::new();
+    for key in state_dict.keys() {
+        let m = state_dict.get(key).unwrap();
+        let dim_1 = m.len();
+        let dim_2 = m[0].len();
+        for idx in 0..dim_1 {
+            for jdx in 0..dim_2 {
+                params.push(m[idx][jdx].clone())
+            }
+        }
+    }
+    println!("num params: {}", params.len())
 }
