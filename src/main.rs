@@ -9,7 +9,7 @@ const FILEPATH: &str = "./input.txt";
 const SEED: u64 = 42;
 
 // Let there be Autograd, to recursively apply the chain rule through a computation graph
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 struct Value {
     pub data: f64,              // scalar value of this node calculated during forward pass
     pub grad: f64, // derivative of the loss w.r.t. this node, calculated in backward pass
@@ -45,15 +45,15 @@ impl Value {
 fn matrix(nout: usize, nin: usize, rng: &mut StdRng) -> Vec<Vec<Value>> {
     let mut m = Vec::new();
     for _ in 0..nout {
-        let inner_row = vec![
-            Value {
+        let mut inner_row: Vec<Value> = Vec::new();
+        for _j in 0..nin {
+            inner_row.push(Value {
                 data: rng.random_range(-0.16..0.16),
                 grad: 0.0 as f64,
                 _children: Vec::new(),
                 _local_grads: Vec::new(),
-            };
-            nin
-        ];
+            });
+        }
         m.push(inner_row)
     }
     m
@@ -131,5 +131,5 @@ fn main() {
             }
         }
     }
-    println!("num params: {}", params.len())
+    println!("num params: {}", params.len());
 }
