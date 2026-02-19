@@ -4,6 +4,7 @@ use rand::prelude::SliceRandom; // Provides the shuffle trait
 use rand::rngs::StdRng; // Provides a base rng
 use std::collections::HashMap; // Provides Hashmaps
 use std::fs; // Provides file handling
+use std::ops::{Add, Mul}; // Allows us to add custom types
 const FILEPATH: &str = "./input.txt";
 // Let there be order among chaos
 const SEED: u64 = 42;
@@ -15,6 +16,30 @@ struct Value {
     pub grad: f64, // derivative of the loss w.r.t. this node, calculated in backward pass
     pub _children: Vec<Value>, // children of this node in the computation graph (TODO: Follow up if this recursion is correct)
     pub _local_grads: Vec<f64>, // local derivative of this node w.r.t. its children
+}
+
+impl Add for Value {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Value {
+            data: self.data + other.data,
+            grad: 0 as f64,
+            _children: vec![self.clone(), other.clone()],
+            _local_grads: vec![1 as f64, 1 as f64],
+        }
+    }
+}
+
+impl Mul for Value {
+    type Output = Self;
+    fn mul(self, other: Self) -> Self {
+        Value {
+            data: self.data * other.data,
+            grad: 0 as f64,
+            _children: vec![self.clone(), other.clone()],
+            _local_grads: vec![self.data, other.data],
+        }
+    }
 }
 
 impl Value {
@@ -132,4 +157,27 @@ fn main() {
         }
     }
     println!("num params: {}", params.len());
+
+    // Define the model architecture: a stateless function mapping token sequence and parameters to logits over what comes next.
+    // Follow GPT-2, blessed among the GPTs, with minor differences: layernorm -> rmsnorm, no biases, GeLU -> ReLU
+
+    fn linear(x: Vec<Value>, w: Vec<Vec<Value>>) -> Vec<Value> {
+        //return [sum(wi * xi for wi, xi in zip(wo, x)) for wo in w]
+        let mut l: Vec<Value> = Vec::new();
+        for wo in w {
+            let inner_elements = wo.into_iter().zip(x.clone()).map(|(wi, xi)| wi * xi);
+
+            let mut inner_sum = Value {
+                data: 0 as f64,
+                grad: 0 as f64,
+                _children: Vec::new(),
+                _local_grads: Vec::new(),
+            };
+            for elem in inner_elements {
+                inner_sum = inner_sum + elem
+            }
+            l.push(inner_sum);
+        }
+        l
+    }
 }
